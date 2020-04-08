@@ -48,6 +48,7 @@ int find_tag_a(char* p, int start_pos_count);
 int check_hyperlink(char* p, int start_a);
 int find_url_length(char* p, int has_link);
 int find_last_part(char* url_without_host);
+int find_start_of_link(char* p, int start_link);
 
 
 /*deal with url*/
@@ -459,8 +460,16 @@ char* check_url_in_line(char* p){
     if(has_link==-1){
         return NULL; 
     }
+    //find the start of the quote "
+    int link_start = find_start_of_link(p, has_link); 
+    if(link_start==-1){
+        return NULL; 
+    }
     //check the length of the url
     int len = find_url_length(p, has_link); 
+    if(len == -1){
+        return NULL; 
+    }
     //return the url 
     char* this_url = substring(p, has_link, len); 
     return this_url; 
@@ -496,12 +505,23 @@ int find_tag_a(char* p, int start_pos_count){
 }
 int check_hyperlink(char* p, int start_a){
     int i; 
-    char* line = "href="; 
-    char* linec = "HREF="; 
-    for(i = start_a; i<(int)strlen(p)-start_a-5; i++){
-        char* subst = substring(p,i,5);
+    char* line = "href"; 
+    char* linec = "HREF"; 
+    for(i = start_a; i<(int)strlen(p)-start_a-4; i++){
+        char* subst = substring(p,i,4);
         if(strcmp(line, subst) == 0 || strcmp(linec, subst) == 0){
-            return i+6; 
+            return i+4; 
+        }
+    }
+    return -1; 
+}
+int find_start_of_link(char*p, int start_link){
+    int i; 
+    char* symble = "\""; 
+    for(i=start_link;i<(int)strlen(p)-start_link; i++){
+        char* subst = substring(p,i,1);
+        if(strcmp(symble, subst) == 0){
+            return i+1; 
         }
     }
     return -1; 
