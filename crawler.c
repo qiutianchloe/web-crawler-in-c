@@ -21,7 +21,7 @@ struct url{
     int state; 
 };
 
-#define USER_AGENT "joeb"
+#define USER_AGENT "tq"
 #define ACCEPT "html/text"
 #define PORT 80
 #define BUFMAX 10000
@@ -257,7 +257,7 @@ char *convert_struct_to_string(url_t* url){
     }
     strcat (str,url->dir);
     if(strcmp(url->filename, "")!=0){
-        strcat (str,"//");
+        strcat (str,"/");
     }
     strcat (str,url->filename);
     
@@ -446,6 +446,7 @@ int deal_with_200(char* p, url_t* urls[], int num_of_url,char* host){
 
 char* check_url_in_line(char* p){
     //clear all the empty space
+    //printf("%s\n", p); 
     int start_pos = find_the_start_content(p);
     if(start_pos==-1){
         return NULL;
@@ -462,16 +463,18 @@ char* check_url_in_line(char* p){
     }
     //find the start of the quote "
     int link_start = find_start_of_link(p, has_link); 
+    //char* check = substring(p,link_start,);
     if(link_start==-1){
         return NULL; 
     }
     //check the length of the url
-    int len = find_url_length(p, has_link); 
+    int len = find_url_length(p, link_start); 
     if(len == -1){
         return NULL; 
     }
     //return the url 
-    char* this_url = substring(p, has_link, len); 
+    char* this_url = substring(p, link_start, len); 
+    //printf("%s\n", this_url); 
     return this_url; 
 }
 
