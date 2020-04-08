@@ -21,7 +21,7 @@ struct url{
     int state; 
 };
 
-#define USER_AGENT "tq"
+#define USER_AGENT "joeb"
 #define ACCEPT "html/text"
 #define PORT 80
 #define BUFMAX 10000
@@ -47,6 +47,7 @@ int find_the_start_content(char* p);
 int find_tag_a(char* p, int start_pos_count); 
 int check_hyperlink(char* p, int start_a);
 int find_url_length(char* p, int has_link);
+int find_last_part(char* url_without_host);
 
 
 /*deal with url*/
@@ -59,6 +60,7 @@ void separate_dir_and_filename(char* url_without_host, url_t* url);
 int check_filename_in_url(char* url_without_host); 
 void print_url_struct(url_t* url); 
 int tow_url_are_same(url_t* url1, url_t* url2); 
+int check_is_filename(char* last_part);
 
 
 /*other function*/
@@ -97,7 +99,9 @@ int main(int argc, char **argv){
     int counter=0; 
     for(counter=0; counter<num_of_url; counter++){
         char * url_now = convert_struct_to_string(urls[counter]); 
+        //print_url_struct(urls[counter]);
         printf("%s\n", url_now); 
+        //printf("\n"); 
     }
     free(response); 
 	return 0;
@@ -166,21 +170,39 @@ void separate_dir_and_filename(char* url_without_host, url_t* url){
             }
         }else{
             int has_filename = check_filename_in_url(url_without_host); 
-            //只有pathname
-            if(has_filename==-1){
-                url->filename = "";  
-                if(strcmp(substring(url_without_host,length_without_host-1,1), "/")!=0){
-                    url->dir = substring(url_without_host,1,length_without_host-1);  
-                }else{
-                    url->dir = substring(url_without_host,1,length_without_host-2); 
-                }
-            }else{
+            //开头只有一条杠
+            if(has_filename!=-1){
+                //最后一部分是以两条杠结尾的
                 url->dir = substring(url_without_host,1,has_filename-1);
                 if(strcmp(substring(url_without_host,length_without_host-1,1), "/")!=0||length_without_host==2){
                     url->filename = substring(url_without_host,has_filename+2,length_without_host-has_filename-2);     
                 }else{
                     url->filename = substring(url_without_host,has_filename+2,length_without_host-has_filename-3);
                 } 
+            }else{
+                int start_of_last_part = find_last_part(url_without_host); 
+                int length_of_lastpart = length_without_host-start_of_last_part-1;
+                char* last_part = substring(url_without_host,start_of_last_part+1, length_of_lastpart); 
+                int is_filename = check_is_filename(last_part); 
+                if(is_filename==-1){
+                    url->filename = "";  
+                    if(strcmp(substring(url_without_host,length_without_host-1,1), "/")!=0){
+                        url->dir = substring(url_without_host,1,length_without_host-1);  
+                    }else{
+                        url->dir = substring(url_without_host,1,length_without_host-2); 
+                    }
+                }else{
+                    if(strcmp(substring(last_part,length_of_lastpart-1,1), "/")!=0){
+                        url->filename = substring(last_part,0,length_of_lastpart);  
+                    }else{
+                        url->filename = substring(last_part,0,length_of_lastpart-1); 
+                    }
+                    if(start_of_last_part==0){
+                        url->dir = ""; 
+                    }else{
+                        url->dir = substring(url_without_host, 1, start_of_last_part-1); 
+                    }
+                }
             }
         }
     }
@@ -188,9 +210,32 @@ void separate_dir_and_filename(char* url_without_host, url_t* url){
 int check_filename_in_url(char* url_without_host){
     int i; 
     char* file_symble = "//"; 
-    for(i = 0; i<(int)strlen(url_without_host)-2; i++){
+    for(i = 0; i<=(int)strlen(url_without_host)-2; i++){
         char* subst = substring(url_without_host,i,2);
         if(strcmp(file_symble, subst) == 0){
+            return i; 
+        }
+    }
+    return -1; 
+}
+
+int check_is_filename(char* last_part){
+    int i; 
+    char* file_symble = ".";
+    for(i = 0; i<(int)strlen(last_part); i++){
+        char* subst = substring(last_part,i,1);
+        if(strcmp(file_symble, subst) == 0){
+            return i; 
+        }
+    }
+    return -1; 
+}
+int find_last_part(char* url_without_host){
+    int i; 
+    char* symble= "/"; 
+    for(i=(int)strlen(url_without_host)-2; i>=0; i--){
+        char* subst = substring(url_without_host,i,1);
+        if(strcmp(symble, subst) == 0){
             return i; 
         }
     }
