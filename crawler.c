@@ -204,7 +204,8 @@ void print_url_struct(url_t* url){
 char *convert_struct_to_string(url_t* url){
     char str[500];
     //char *header = generate_the_header("GET /","", "HTTP/1.1", domain_add, "tq", "html/text"); 
-    strcpy (str,url->hostname);
+    strcpy (str,"http://");
+    strcat(str,url->hostname);
     if(strcmp(url->dir, "")!=0){
         strcat(str,"/");
     }
